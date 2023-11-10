@@ -17,9 +17,9 @@ def startup(path):
 	USER_NAME = getpass.getuser()
 	global bat_path
 	bat_path = r'C:\Users\%s\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup' % USER_NAME
-	
+
 	with open(bat_path + '\\' + "open.bat", "w+") as bat_file:
-		bat_file.write(r'start "" %s' % path)
+		bat_file.write(f'start "" {path}')
 
 def uninstall(wind):
 	wind.destroy()
