@@ -2,14 +2,17 @@
 # -*- coding: utf-8 -*-
 import getpass
 import os
-import ctypes
-import subprocess
 from tkinter import Tk, Label, Button
+from transformers import pipeline
 
-class EthicalWinlocker:
+class MachineLearningWinlocker:
     def __init__(self):
         self.user_name = getpass.getuser()
         self.startup_path = fr"C:\Users\{self.user_name}\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup"
+
+        # Load Hugging Face sentiment analysis pipeline
+        self.sentiment_analyzer = pipeline("sentiment-analysis")
+        print("[+] Sentiment analysis pipeline loaded.")
 
     def add_persistence(self, script_path):
         """Simulates adding a script to startup."""
@@ -44,25 +47,21 @@ class EthicalWinlocker:
 
         root.mainloop()
 
-    def log_attempts(self, file_name="attempts.log"):
-        """Logs simulated unauthorized access attempts."""
+    def analyze_input(self, user_input):
+        """Uses Hugging Face sentiment analysis to evaluate user input."""
         try:
-            with open(file_name, "a") as log_file:
-                log_file.write("Unauthorized access attempt detected\n")
-            print("[+] Unauthorized attempt logged.")
-        except Exception as e:
-            print(f"[-] Error logging attempts: {e}")
+            result = self.sentiment_analyzer(user_input)
+            sentiment = result[0]
+            print(f"[+] Input analysis: {user_input}")
+            print(f"    Sentiment: {sentiment['label']} (Score: {sentiment['score']:.2f})")
 
-    def simulate_attack(self, input_block=False):
-        """Simulates an input blocking or data exfiltration test."""
-        print("[+] Simulating input blocking or attack mechanism.")
-        if input_block:
-            try:
-                import keyboard
-                keyboard.block_key('a')  # Block key 'a' as an example
-                print("[+] Key 'a' blocked successfully.")
-            except ImportError:
-                print("[-] Install `keyboard` library to simulate input blocking.")
+            # Simulate response based on sentiment
+            if sentiment['label'] == "NEGATIVE":
+                print("[!] Suspicious or hostile input detected.")
+            else:
+                print("[+] Input seems normal.")
+        except Exception as e:
+            print(f"[-] Error analyzing input: {e}")
 
     def cleanup(self):
         """Simulates cleanup actions after a test."""
@@ -70,7 +69,7 @@ class EthicalWinlocker:
         print("[+] Cleanup complete.")
 
 if __name__ == "__main__":
-    winlocker = EthicalWinlocker()
+    winlocker = MachineLearningWinlocker()
 
     # Simulate startup persistence
     script_path = os.path.abspath(__file__)
@@ -79,11 +78,10 @@ if __name__ == "__main__":
     # Simulate a lock screen
     winlocker.lock_screen()
 
-    # Simulate logging unauthorized attempts
-    winlocker.log_attempts()
-
-    # Simulate an attack (e.g., input blocking)
-    winlocker.simulate_attack(input_block=True)
+    # Analyze user inputs
+    inputs = ["I hate this system", "Everything is fine", "Delete this file now!"]
+    for user_input in inputs:
+        winlocker.analyze_input(user_input)
 
     # Perform cleanup
     winlocker.cleanup()
