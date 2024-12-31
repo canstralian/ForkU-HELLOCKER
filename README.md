@@ -1,6 +1,7 @@
 # HELLOCKER
 Winlocker on python
 
+This is my version of HELLOCKER with edits.
 
 HELLOCKER
 Winlocker written in Python.
@@ -8,7 +9,7 @@ DO NOT USE FOR EVIL PURPOSES!
 
 Functional:
 
-1.Banner in full screen on top of all windows
+1. Banner in full screen on top of all windows
 
 2. Complete blocking of the keyboard (the password can be entered by clicking on the graphic buttons)
 
@@ -16,17 +17,13 @@ Functional:
 
 4. Call bsod when password attempts expire
 
-detections:  https://antiscan.me/scan/new/result?id=waxnPp6SXDLi
-
-
-
+detections: https://antiscan.me/scan/new/result?id=waxnPp6SXDLi
 
 Using:
 
-1.Open the lock.py file in your code editor
+1. Open the lock.py file in your code editor
 
-2. Find the variables at the very beginning:
-password, lock_text and count.
+2. Find the variables at the very beginning: password, lock_text and count.
 
 3. In password, instead of "123" in quotes, enter the password from numbers.
 
@@ -36,10 +33,3 @@ password, lock_text and count.
 
 6. Open a command line, go to the folder with the repository, write
 
-pip install -r requriments.txt
-
-then
-
-pyinstaller -F lock.py
-
-go to the new dist folder then find the lock.exe file there. This is your build.
